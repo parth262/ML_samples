@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score
 
 (X, y) = load_iris(True)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15)
 
 clf = KNeighborsClassifier()
 clf.fit(X_train, y_train)
