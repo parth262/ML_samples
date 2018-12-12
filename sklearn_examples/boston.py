@@ -15,7 +15,17 @@ predictions = clf.predict(X_test)
 print(mean_absolute_error(y_test, predictions))
 print(r2_score(y_test, predictions))
 
-plt.plot(predictions)
-plt.plot(y_test)
-plt.legend(['predictions', 'actual'])
+# plt.plot(predictions)
+# plt.plot(y_test)
+# plt.legend(['predictions', 'actual'])
+# plt.show()
+
+import numpy as np
+
+x_mean = np.mean(X, axis=1)
+coeff_mean = np.mean(clf.coef_)
+
+f = coeff_mean * x_mean + clf.intercept_
+
+plt.plot(x_mean, f)
 plt.show()
