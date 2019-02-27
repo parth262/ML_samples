@@ -1,14 +1,18 @@
 import re
+import warnings
+
+from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.optimizers import Adam
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, AdaBoostClassifier, GradientBoostingClassifier
 
-train_data = pd.read_csv("resources/titanic/train.csv")
-test_data = pd.read_csv("resources/titanic/test.csv")
+train_data = pd.read_csv("../resources/titanic/train.csv")
+test_data = pd.read_csv("../resources/titanic/test.csv")
 full_data = [train_data, test_data]
 
 test_passenger_ids = test_data["PassengerId"]
@@ -85,28 +89,70 @@ for dataset in full_data:
     # Mapping Age
     dataset["Age"] = dataset["Age"].apply(map_age)
 
-drop_elements = ['PassengerId', 'Name', 'Ticket', 'Cabin', 'SibSp', 'Parch', 'FamilySize']
-train_data = train_data.drop(drop_elements, axis=1)
-train_data = train_data.drop(['CategoricalAge', 'CategoricalFare'], axis=1)
+drop_elements = ['PassengerId', 'Name', 'Ticket', 'Cabin', 'CategoricalAge', 'CategoricalFare', 'Survived']
 
-test_data = test_data.drop(drop_elements, axis=1)
+# test_data = test_data.drop(drop_elements, axis=1)
 
-X = train_data.drop("Survived", axis=1)
+X = train_data.drop(drop_elements, axis=1)
 y = train_data["Survived"]
 
 train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.1)
 
-clfs = [SVC(), RandomForestClassifier(), ExtraTreesClassifier(), AdaBoostClassifier(), GradientBoostingClassifier()]
+# clfs = [
+#     LogisticRegression(),
+#     SVC(),
+#     DecisionTreeClassifier(max_depth=3, max_leaf_nodes=10),
+#     RandomForestClassifier(max_depth=3, max_leaf_nodes=10),
+#     ExtraTreesClassifier(),
+#     AdaBoostClassifier(RandomForestClassifier(max_depth=3, max_leaf_nodes=10), n_estimators=5, learning_rate=0.5, random_state=12),
+#     GradientBoostingClassifier(),
+#     KNeighborsClassifier()
+# ]
+#
+# param_grid = {
+#     'max_depth': np.arange(3, 10),
+#     'criterion': ['gini', 'entropy'],
+#     'max_leaf_nodes': np.arange(3, 10),
+#     'min_samples_split': np.arange(3, 10),
+#     # 'class_weight': ['balanced']
+# }
+#
+#
+# def grid_search_cv(estimator, param_grid, cv, scoring, t_X, t_y):
+#     grid_tree = GridSearchCV(estimator, param_grid, scoring, cv=cv)
+#     grid_tree.fit(t_X, t_y)
+#     print(grid_tree.best_estimator_)
+#     print(np.abs(grid_tree.best_score_))
+#
+#
+# for clf in [DecisionTreeClassifier(), RandomForestClassifier()]:
+#     grid_search_cv(clf, param_grid, 5, 'accuracy', X, y)
 
-for clf in clfs:
-    clf.fit(train_X, train_y)
-    predictions = clf.predict(test_X)
-    score = accuracy_score(test_y, predictions)
-    print(score)
+# for clf in clfs:
+#     clf.fit(train_X, train_y)
+#     predictions = clf.predict(test_X)
+#     score = accuracy_score(test_y, predictions)
+#     print(clf.__class__.__name__)
+#     print(score)
 
-final_clf = SVC()
-final_clf.fit(X, y)
-final_predictions = final_clf.predict(test_data)
+# final_clf = SVC()
+# final_clf.fit(X, y)
+# final_predictions = final_clf.predict(test_data)
+#
+# output = pd.DataFrame({"PassengerId": test_passenger_ids, "Survived": final_predictions})
+# output.to_csv("resources/titanic/submission.csv", index=False)
 
-output = pd.DataFrame({"PassengerId": test_passenger_ids, "Survived": final_predictions})
-output.to_csv("resources/titanic/submission.csv", index=False)
+
+import tensorflow as tf
+
+model = Sequential()
+
+model.add(Dense(12, input_dim=train_X.shape[1], activation=tf.nn.relu))
+model.add(Dense(10, activation=tf.nn.relu))
+model.add(Dense(2, activation=tf.nn.softmax))
+model.compile(optimizer=Adam(0.001), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+model.fit(X, y, epochs=30, batch_size=5)
+# y_pred = model.predict(test_X)
+
+
